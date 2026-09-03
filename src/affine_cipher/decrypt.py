@@ -1,9 +1,6 @@
 import string
 from colorama import init, Fore
 
-# Initialize colorama
-init()
-
 # Function to get the Euclidean Algorithm
 def extended_gcd(a, b):
     """
@@ -14,6 +11,7 @@ def extended_gcd(a, b):
     else:
         g, x, y = extended_gcd(b % a, a)
         return (g, y - (b // a) * x, x)
+
 # function to get the modular inverse
 def modular_inverse(a, m):
     """
@@ -25,6 +23,7 @@ def modular_inverse(a, m):
         raise Exception('Modular inverse does not exist!')
     else:
         return x % m
+
 # Function to decrypt our message
 def affine_decrypt(ciphertext, a, b):
     """
@@ -51,6 +50,7 @@ def affine_decrypt(ciphertext, a, b):
             plaintext += char
     # Return the decrypted plaintext
     return plaintext
+
 # Function to perform brute-force attack
 def affine_brute_force(ciphertext):
     """
@@ -68,6 +68,11 @@ def affine_brute_force(ciphertext):
                 decrypted_text = affine_decrypt(ciphertext, a, b)
                 # Print potential decryption for manual inspection
                 print(f'Key a={a}, b={b}: {decrypted_text}')
-ciphertext = input(f'{Fore.GREEN}[?] Enter message to decrypt: ')
-# Perform a brute-force attack to find a potential decrypted message.
-affine_brute_force(ciphertext)
+
+def run_decrypt():
+    # Initialize colorama
+    init()
+
+    ciphertext = input(f'{Fore.GREEN}[?] Enter message to decrypt: ')
+    # Perform a brute-force attack to find a potential decrypted message.
+    affine_brute_force(ciphertext)
