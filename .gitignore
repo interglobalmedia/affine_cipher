@@ -2,3 +2,9 @@ Claude outputs/
 git-commit-messages.md
 output.txt
 notes.md
+
+.venv
+src/affine_cipher/__pycache__
+.pytest_cache
+.coverage
+
