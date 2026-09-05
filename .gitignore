@@ -8,4 +8,5 @@ notes.md
 .coverage
 __pycache__/
 htmlcov
+test-notes.md
 
