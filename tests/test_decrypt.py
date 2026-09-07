@@ -1,5 +1,8 @@
-from affine_cipher.decrypt import affine_decrypt, extended_gcd, modular_inverse, affine_brute_force
+from affine_cipher.decrypt import affine_decrypt, extended_gcd, modular_inverse, affine_brute_force, run_decrypt
+from affine_cipher import cli
 import pytest
+from unittest.mock import MagicMock
+from colorama import init, Fore
 
 def test_affine_decrypt_with_known_key_hello():
 
@@ -57,3 +60,14 @@ def test_affine_brute_force_finds_correct_key(capsys):
 
     assert "Key a=3, b=10: HELLO" in captured.out
 
+def test_run_decrypt(capsys, monkeypatch):
+
+    mock_input = MagicMock(return_value="FWRRA")
+
+    monkeypatch.setattr("builtins.input", mock_input)
+
+    run_decrypt()
+    
+    captured = capsys.readouterr()
+
+    assert "Key a=3, b=10: HELLO" in captured.out
