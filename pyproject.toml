@@ -34,9 +34,12 @@ testpaths = ["tests"]
 
 [tool.coverage.run]
 source = ["src"]
+branch = true
 
 [tool.coverage.report]
 show_missing = true
 
 # run command is:
 # pytest --cov=affine_cipher --cov-report=term-missing
+# and to make sure the latest test results render in the browser (not stale):
+# pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
