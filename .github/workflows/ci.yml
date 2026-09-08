@@ -1,0 +1,71 @@
+name: ci
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - "main"
+permissions:
+  contents: read
+concurrency:
+  group: ${{ github.workflow }}-${{ github.head_ref || github.run_id }}
+  cancel-in-progress: true
+jobs:
+  lint-and-test:
+    env:
+      UV_CACHE_DIR: /tmp/.uv-cache
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ".python-version"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.0.0
+        with:
+          enable-cache: true
+          version-file: "pyproject.toml"
+      - name: Install dependencies
+        run: uv sync --all-extras --dev --frozen
+      - name: Run ruff lint
+        run: uv run ruff check src tests
+      - name: Run ruff format check
+        run: uv run ruff format --check src tests
+      - name: Run mypy
+        run: uv run mypy .
+      - name: Test with pytest
+        run: uv run pytest tests --cov=affine_cipher --cov-report=term-missing --cov-report=xml
+      - name: Run bandit
+        run: uv run bandit -r src
+      - name: Run pip-audit
+        run: uv run pip-audit
+      - name: Minimize uv cache
+        run: uv cache prune --ci
+  build:
+    needs: lint-and-test
+    env:
+      UV_CACHE_DIR: /tmp/.uv-cache
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+      - name: Set up python
+        id: setup-python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ".python-version"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.0.0
+        with:
+          enable-cache: true
+          version-file: "pyproject.toml"
+      - name: Install dependencies
+        run: uv sync --all-extras --dev --frozen
+      - name: Build a wheel
+        run: uv build
+      - name: Minimize uv cache
+        run: uv cache prune --ci
