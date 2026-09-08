@@ -1,8 +1,10 @@
 import argparse
-from affine_cipher.encrypt import run_encrypt
-from affine_cipher.decrypt import run_decrypt
 
-def main():
+from affine_cipher.decrypt import run_decrypt
+from affine_cipher.encrypt import run_encrypt
+
+
+def main() -> None:
 
     parser = argparse.ArgumentParser(prog="affine-cipher")
     subparsers = parser.add_subparsers(dest="command", required=True)
