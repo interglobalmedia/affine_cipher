@@ -1,4 +1,5 @@
 from unittest.mock import MagicMock
+
 import pytest
 
 from affine_cipher.encrypt import affine_encryption, run_encrypt
