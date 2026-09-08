@@ -1,10 +1,13 @@
 import string
-from colorama import init, Fore
+
+from colorama import Fore, init
+
 
 # Function to get the Euclidean Algorithm
-def extended_gcd(a, b):
+def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
     """
-    extended Euclidean Algorithm to find the greatest common divisor and coefficients x, y such that ax + by = gcd(a, b)
+    extended Euclidean Algorithm to find the greatest common divisor and
+    coefficients x, y such that ax + by = gcd(a, b)
     """
     if a == 0:
         return (b, 0, 1)
@@ -12,26 +15,28 @@ def extended_gcd(a, b):
         g, x, y = extended_gcd(b % a, a)
         return (g, y - (b // a) * x, x)
 
+
 # function to get the modular inverse
-def modular_inverse(a, m):
+def modular_inverse(a: int, m: int) -> int:
     """
     Compute the modular multiplicative inverse of a modulo m.
     Raises an exception if the modular inverse does not exist.
     """
     g, x, y = extended_gcd(a, m)
     if g != 1:
-        raise Exception('Modular inverse does not exist!')
+        raise ValueError("Modular inverse does not exist!")
     else:
         return x % m
 
+
 # Function to decrypt our message
-def affine_decrypt(ciphertext, a, b):
+def affine_decrypt(ciphertext: str, a: int, b: int) -> str:
     """
     Decrypt a message with the Affine Cipher using the given key components a and b.
     """
     alphabet = string.ascii_uppercase
     m = len(alphabet)
-    plaintext = ''
+    plaintext = ""
     # Compute the multiplicative inverse of a
     a_inv = modular_inverse(a, m)
     # Iterate through each character in the ciphertext
@@ -51,10 +56,12 @@ def affine_decrypt(ciphertext, a, b):
     # Return the decrypted plaintext
     return plaintext
 
+
 # Function to perform brute-force attack
-def affine_brute_force(ciphertext):
+def affine_brute_force(ciphertext: str) -> None:
     """
-    Brute-force attack to find possible keys for an Affine Cipher and print potential decryptions for manual inspection.
+    Brute-force attack to find possible keys for an Affine Cipher and print
+    potential decryptions for manual inspection.
     """
     alphabet = string.ascii_uppercase
     m = len(alphabet)
@@ -67,12 +74,13 @@ def affine_brute_force(ciphertext):
                 # Decrypt using the current key
                 decrypted_text = affine_decrypt(ciphertext, a, b)
                 # Print potential decryption for manual inspection
-                print(f'Key a={a}, b={b}: {decrypted_text}')
+                print(f"Key a={a}, b={b}: {decrypted_text}")
 
-def run_decrypt():
+
+def run_decrypt() -> None:
     # Initialize colorama
     init()
 
-    ciphertext = input(f'{Fore.GREEN}[?] Enter message to decrypt: ')
+    ciphertext = input(f"{Fore.GREEN}[?] Enter message to decrypt: ")
     # Perform a brute-force attack to find a potential decrypted message.
     affine_brute_force(ciphertext)

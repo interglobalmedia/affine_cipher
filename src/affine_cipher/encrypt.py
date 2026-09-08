@@ -1,8 +1,9 @@
 import string
-from colorama import init, Fore
+
+from colorama import Fore, init
 
 
-def affine_encryption(plaintext, a, b):
+def affine_encryption(plaintext: str, a: int, b: int) -> str:
     # Define the uppercase alphabet.
     alphabet = string.ascii_uppercase
     # Get the length of the alphabet
@@ -27,7 +28,7 @@ def affine_encryption(plaintext, a, b):
     return ciphertext
 
 
-def run_encrypt():
+def run_encrypt() -> None:
 
     # Initialize Colorama
     init()

@@ -10,3 +10,8 @@ __pycache__/
 htmlcov
 test-notes.md
 
+src/.DS_Store
+.DS_Store
+
+.mypy_cache/
+.ruff_cache/

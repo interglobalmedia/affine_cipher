@@ -27,6 +27,7 @@ dev = [
     "pytest>=9.1.1",
     "pytest-cov>=7.1.0",
     "ruff>=0.16.5",
+    "types-colorama>=0.4.15.20260508",
 ]
 
 [tool.pytest.ini_options]
@@ -43,3 +44,14 @@ show_missing = true
 # pytest --cov=affine_cipher --cov-report=term-missing
 # and to make sure the latest test results render in the browser (not stale):
 # pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
+
+[tool.ruff]
+target-version = "py314"
+line-length = 88
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B"]
+
+[tool.mypy]
+python_version = "3.14"
+disallow_untyped_defs = true
