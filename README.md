@@ -60,7 +60,7 @@ To view the original project, please visit [commit a2b3ddb](https://github.com/i
 
 ### Project structure
 
-If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|output.txt|git-commit-messages.md|.pytest_cache|.ruff_cache|.mypy_cache|.DS_Store|.git|.venv|__pycache__' from the command line, filtering out the noise this diagram excludes, it results in the following:
+If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|output.txt|git-commit-messages.md|.pytest_cache|.ruff_cache|.mypy_cache|.DS_Store|.git|.venv|__pycache__|coverage.xml|dist' from the command line, filtering out the noise this diagram excludes, it results in the following:
 
 ```
 .
