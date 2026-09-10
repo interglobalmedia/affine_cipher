@@ -75,31 +75,17 @@ If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|o
 ├── src
 │   └── affine_cipher
 │       ├── __init__.py
-│       ├── __pycache__
-│       │   ├── __init__.cpython-310.pyc
-│       │   ├── __init__.cpython-314.pyc
-│       │   ├── cli.cpython-310.pyc
-│       │   ├── cli.cpython-314.pyc
-│       │   ├── decrypt.cpython-310.pyc
-│       │   ├── decrypt.cpython-314.pyc
-│       │   ├── encrypt.cpython-310.pyc
-│       │   └── encrypt.cpython-314.pyc
 │       ├── cli.py
 │       ├── decrypt.py
 │       └── encrypt.py
 ├── tests
-│   ├── __pycache__
-│   │   ├── test_cli.cpython-314-pytest-9.1.1.pyc
-│   │   ├── test_decrypt.cpython-314-pytest-9.1.1.pyc
-│   │   ├── test_encrypt.cpython-314-pytest-9.1.1.pyc
-│   │   └── test_roundtrip.cpython-314-pytest-9.1.1.pyc
 │   ├── test_cli.py
 │   ├── test_decrypt.py
 │   ├── test_encrypt.py
 │   └── test_roundtrip.py
 └── uv.lock
 
-8 directories, 27 files
+6 directories, 15 files
 ```
 ### encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py
 
