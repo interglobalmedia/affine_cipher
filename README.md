@@ -21,9 +21,9 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
 - [Using a script to encrypt plaintext](#using-a-script-to-encrypt-plaintext)
 - [Using a script to decrypt ciphertext](#using-a-script-to-decrypt-ciphertext)
 - [Cipher correctness](#cipher-correctness)
-- [Testing](#testing)
-- [Code quality machinery](#code-quality-machinery)
+- [Workflow & Tooling](#workflow--tooling)
     - [Linting + formatting](#linting--formatting)
+    - [Testing](#testing)
     - [Security](#security)
     - [Pre-commit hooks](#pre-commit-hooks)
     - [CI/CD](#cicd)
@@ -899,23 +899,7 @@ That said, this project contains limitations:
 1. There is no real known-key decrypt path via CLI, deciding on lowercase/non-alphabetic handling, real key args instead of hardcoded.
 1. I can't pick my own key without editing source code.
 
-## Testing
-
-| Tool | Purpose | Configured in |
-| --- | --- | --- |
-|pytest | test runner/framework | pyproject.toml/<div>[tool.pytest.ini_options]</div> |
-| pytest-cov | the coverage plugin measuring branch and statement coverage | pyproject.toml/<div>[tool.coverage.run]</div><div>[tool.coverage.report]</div> |
-
-**Testing commands:**
-
-```shell
-# pytest:
-pytest --cov=affine_cipher --cov-report=term-missing
-# pytest-cov:
-pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
-```
-
-## Code quality machinery
+## Workflow & Tooling
 
 ### Linting + formatting
 
@@ -923,6 +907,22 @@ pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
 | --- | --- | --- |
 | ruff | lint + format | pyproject.toml/<div>[tool.ruff]</div><div>target-version = "py314"</div><div>line-length = 88</div><div>[tool.ruff.lint]</div><div>select = ["E", "F", "I", "UP", "B"]</div> |
 | mypy | checks/verifies standard type hints in Python code | pyproject.toml/<div>[tool.mypy]</div><div>python_version = "3.14"</div><div>disallow_untyped_defs = true</div> |
+
+### Testing
+
+| Tool | Purpose | Configured in |
+| --- | --- | --- |
+| pytest | test runner/framework | pyproject.toml/<div>[tool.pytest.ini_options]</div> |
+| pytest-cov | the coverage plugin measuring branch and statement coverage | pyproject.toml/<div>[tool.coverage.run]</div><div>[tool.coverage.report]</div> |
+
+**Testing commands:**
+
+```shell
+# terminal report:
+pytest --cov=affine_cipher --cov-report=term-missing
+# terminal + html report:
+pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
+```
 
 ### Security
 
@@ -944,10 +944,10 @@ pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
 
 ### CI/CD
 
-GitHub Actions runs on every push and pull request to `main `(`.github/workflows/ci.yml`), via two jobs:
+GitHub Actions runs on every push and pull request to `main` (`.github/workflows/ci.yml`), via two jobs:
 
 - `lint-and-test`: runs the checks from the tables above against every commit. `ruff check` and `ruff format --check` (lint & format), `mypy .` (type checking), `pytest` with coverage reporting (`--cov=affine_cipher --cov-report=term-missing --cov-report=xml`), `bandit -r src` (security static analysis), and `pip-audit` (dependency vulnerability scanning). Environment setup uses `astral-sh/setup-uv` + `uv sync --all-extras --dev --frozen` for a reproducible install.
-- `build `: runs `uv build` to produce a wheel, as a preview of the (currently deferred) Publish to PyPI work.
+- `build`: runs `uv build` to produce a wheel, as a preview of the (currently deferred) Publish to PyPI work.
 
 `permissions: contents: read` scopes the workflow's token down to read-only, and a `concurrency` group cancels stale runs when new commits land on the same branch.
 
