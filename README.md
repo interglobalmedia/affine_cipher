@@ -527,6 +527,14 @@ p = -90 mod 26 = (-90 + 26 + 26 + 26 + 26 = 14)
 14 = O
 ```
 
+## Setup
+
+```shell
+git clone https://github.com/interglobalmedia/affine_cipher.git
+cd affine_cipher
+uv sync
+```
+
 ## Using a script to encrypt plaintext
 
 You don't have to encrypt plaintext manually. This project provides a script that will do it for you:
