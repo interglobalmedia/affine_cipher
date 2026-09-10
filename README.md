@@ -4,6 +4,33 @@ This repository consists of a Python implementation of the Affine Cipher.
 
 The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts plaintext by substituting one alphabetical character for another. It uses a mathematical function to encrypt the plaintext.
 
+## Table of Contents
+
+- [Original state of the project](#original-state-of-the-project)
+- [Current state of the project](#current-state-of-the-project)
+    - [Project structure](#project-structure)
+    - [encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py](#encrypt_affine_cypherpy---srcaffine_cipherencryptpy)
+    - [decrypt_affine_cipher.py -> src/affine_cipher/decrypt.py](#decrypt_affine_cipherpy---srcaffine_cipherdecryptpy)
+    - [src/affine_cipher/cli.py](#srcaffine_cipherclipy)
+- [Mathematical function to encrypt the plaintext manually](#mathematical-function-to-encrypt-the-plaintext-manually)
+    - [Affine Cipher encryption example](#affine-cipher-encryption-example)
+- [Mathematical function to decrypt the ciphertext manually](#mathematical-function-to-decrypt-the-ciphertext-manually)
+- [Finding the modular multiplicative inverse of an integer](#finding-the-modular-multiplicative-inverse-of-an-integer)
+    - [Affine Cipher decryption example](#affine-cipher-decryption-example)
+- [Setup](#setup)
+- [Using a script to encrypt plaintext](#using-a-script-to-encrypt-plaintext)
+- [Using a script to decrypt ciphertext](#using-a-script-to-decrypt-ciphertext)
+- [Cipher correctness](#cipher-correctness)
+- [Testing](#testing)
+- [Code quality machinery](#code-quality-machinery)
+    - [Linting + formatting](#linting--formatting)
+    - [Security](#security)
+    - [Pre-commit hooks](#pre-commit-hooks)
+    - [CI/CD](#cicd)
+- [Footnotes](#footnotes)
+
+
+
 ## Original state of the project
 
 Originally, the structure of the project was the following:
