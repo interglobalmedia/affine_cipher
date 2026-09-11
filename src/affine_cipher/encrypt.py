@@ -2,6 +2,8 @@ import string
 
 from colorama import Fore, init
 
+from affine_cipher.case import restore_char_case
+
 
 def affine_encryption(plaintext: str, a: int, b: int) -> str:
     # Define the uppercase alphabet.
@@ -13,14 +15,15 @@ def affine_encryption(plaintext: str, a: int, b: int) -> str:
     # Iterate through each character in the plaintext.
     for char in plaintext:
         # Check if the character is in the alphabet.
-        if char in alphabet:
+        if char.upper() in alphabet:
             # If it's an alphabet letter, encrypt it.
             # Find the index of the character in the alphabet.
-            p = alphabet.index(char)
+            p = alphabet.index(char.upper())
             # Apply the encryption formula: (a * p + b) mod m.
             c = (a * p + b) % m
             # Append the encrypted character to the ciphertext.
-            ciphertext += alphabet[c]
+            transformed = alphabet[c]
+            ciphertext += restore_char_case(char, transformed)
         else:
             # If the character is not in the alphabet, keep it unchanged.
             ciphertext += char

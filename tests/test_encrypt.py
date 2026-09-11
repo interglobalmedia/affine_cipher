@@ -24,10 +24,10 @@ def test_affine_encryption_with_known_key_bollix() -> None:
     assert result == "NARRIB"
 
 
-def test_affine_encryption_lowercase_passthrough() -> None:
+def test_affine_encryption_lowercase_case_preserved() -> None:
     result = affine_encryption("bollix", 3, 10)
 
-    assert result == "bollix"
+    assert result == "narrib"
 
 
 def test_affine_encryption_empty_string() -> None:
