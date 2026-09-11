@@ -3,6 +3,7 @@ import string
 from colorama import Fore, init
 
 from affine_cipher.case import restore_char_case
+from affine_cipher.key_validation import validate_affine_key
 
 
 def affine_encryption(plaintext: str, a: int, b: int) -> str:
@@ -10,6 +11,7 @@ def affine_encryption(plaintext: str, a: int, b: int) -> str:
     alphabet = string.ascii_uppercase
     # Get the length of the alphabet
     m = len(alphabet)
+    validate_affine_key(a, m)
     # Initialize an empty string to store the ciphertext.
     ciphertext = ""
     # Iterate through each character in the plaintext.
