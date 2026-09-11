@@ -32,9 +32,9 @@ def test_affine_decrypt_with_known_key_quartz() -> None:
     assert result == "QUARTZ"
 
 
-def test_affine_decrypt_lowercase_passthrough() -> None:
+def test_affine_decrypt_lowercase_case_preserved() -> None:
 
-    result = affine_decrypt("bollix", 3, 10)
+    result = affine_decrypt("narrib", 3, 10)
 
     assert result == "bollix"
 

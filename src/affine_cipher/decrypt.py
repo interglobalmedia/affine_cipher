@@ -2,6 +2,8 @@ import string
 
 from colorama import Fore, init
 
+from affine_cipher.case import restore_char_case
+
 
 # Function to get the Euclidean Algorithm
 def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
@@ -42,14 +44,15 @@ def affine_decrypt(ciphertext: str, a: int, b: int) -> str:
     # Iterate through each character in the ciphertext
     for char in ciphertext:
         # Check if the character is in the alphabet
-        if char in alphabet:
+        if char.upper() in alphabet:
             # If it's an alphabet letter, decrypt it
             # Find the index of the character in the alphabet
-            c = alphabet.index(char)
+            c = alphabet.index(char.upper())
             # Apply the decryption formula: a_inv * (c - b) mod m
             p = (a_inv * (c - b)) % m
+            transformed = alphabet[p]
             # Append the decrypted character to the plaintext
-            plaintext += alphabet[p]
+            plaintext += restore_char_case(char, transformed)
         else:
             # If the character is not in the alphabet, keep it unchanged
             plaintext += char
