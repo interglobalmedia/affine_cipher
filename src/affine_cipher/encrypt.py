@@ -31,15 +31,14 @@ def affine_encryption(plaintext: str, a: int, b: int) -> str:
     return ciphertext
 
 
-def run_encrypt() -> None:
+def run_encrypt(a: int, b: int) -> None:
 
     # Initialize Colorama
     init()
 
     # Define the plaintext and key components
     plaintext = input(f"{Fore.GREEN}[?] Enter text to encrypt: ")
-    a = 3
-    b = 10
+
     # Call the affine_crypt function with the specified parameters
     encrypted_text = affine_encryption(plaintext, a, b)
     # Print the original plaintext, the key components, and the encrypted text

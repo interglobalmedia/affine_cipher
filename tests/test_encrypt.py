@@ -44,7 +44,7 @@ def test_run_encrypt(
 
     monkeypatch.setattr("builtins.input", mock_input)
 
-    run_encrypt()
+    run_encrypt(a=3, b=10)
 
     captured = capsys.readouterr()
 
