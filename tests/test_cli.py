@@ -8,7 +8,9 @@ from affine_cipher import cli
 
 def test_encrypt_dispatch(monkeypatch: pytest.MonkeyPatch) -> None:
 
-    monkeypatch.setattr(sys, "argv", ["affine-cipher", "encrypt"])
+    monkeypatch.setattr(
+        sys, "argv", ["affine-cipher", "encrypt", "-a", "3", "-b", "10"]
+    )
 
     mock_run_encrypt = MagicMock()
 
@@ -16,7 +18,7 @@ def test_encrypt_dispatch(monkeypatch: pytest.MonkeyPatch) -> None:
 
     cli.main()
 
-    assert mock_run_encrypt.called
+    mock_run_encrypt.assert_called_once_with(3, 10)
 
 
 def test_decrypt_dispatch(monkeypatch: pytest.MonkeyPatch) -> None:
