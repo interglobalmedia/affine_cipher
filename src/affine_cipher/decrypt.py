@@ -3,6 +3,7 @@ import string
 from colorama import Fore, init
 
 from affine_cipher.case import restore_char_case
+from affine_cipher.key_validation import validate_affine_key
 
 
 # Function to get the Euclidean Algorithm
@@ -38,6 +39,7 @@ def affine_decrypt(ciphertext: str, a: int, b: int) -> str:
     """
     alphabet = string.ascii_uppercase
     m = len(alphabet)
+    validate_affine_key(a, m)
     plaintext = ""
     # Compute the multiplicative inverse of a
     a_inv = modular_inverse(a, m)
@@ -80,10 +82,16 @@ def affine_brute_force(ciphertext: str) -> None:
                 print(f"Key a={a}, b={b}: {decrypted_text}")
 
 
-def run_decrypt() -> None:
-    # Initialize colorama
+def run_decrypt(a: int | None, b: int | None, brute_force: bool) -> None:
+    # Initialize Colorama
     init()
 
     ciphertext = input(f"{Fore.GREEN}[?] Enter message to decrypt: ")
-    # Perform a brute-force attack to find a potential decrypted message.
-    affine_brute_force(ciphertext)
+    if a is not None and b is not None:
+        decrypted_text = affine_decrypt(ciphertext, a, b)
+        print(f"{Fore.GREEN}[+] Decrypted Text: {decrypted_text} ")
+    elif a is None and b is None and not brute_force:
+        raise ValueError("Please either supply a key or --brute-force.")
+    else:
+        # Perform a brute-force attack to find a potential decrypted message.
+        affine_brute_force(ciphertext)
