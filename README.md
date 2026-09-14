@@ -18,9 +18,14 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
 - [Finding the modular multiplicative inverse of an integer](#finding-the-modular-multiplicative-inverse-of-an-integer)
     - [Affine Cipher decryption example](#affine-cipher-decryption-example)
 - [Setup](#setup)
+- [uv run vs source .venv/bin/activate](#uv-run-vs-source-venvbinactivate)
 - [Using a script to encrypt plaintext](#using-a-script-to-encrypt-plaintext)
 - [Using a script to decrypt ciphertext](#using-a-script-to-decrypt-ciphertext)
 - [Cipher correctness](#cipher-correctness)
+    - [run_decrypt() in decrypt.py runs affine_decrypt() or affine_brute_force()](#run_decrypt-in-decryptpy-runs-affine_decrypt-or-affine_brute_force)
+    - [coprime validation](#coprime-validation)
+    - [Adding a real known-key decrypt path via CLI](#adding-a-real-known-key-decrypt-path-via-cli)
+- [affine-cipher decrypt commands](#affine-cipher-decrypt-commands)
 - [Workflow & Tooling](#workflow--tooling)
     - [Linting + formatting](#linting--formatting)
     - [Testing](#testing)
@@ -548,6 +553,32 @@ cd affine_cipher
 uv sync
 ```
 
+Next, you will want to turn on the virtual environment with the command:
+
+```shell
+# run this at the root of the project
+source .venv/bin/activate
+```
+
+To deactivate the virtual environment, simply run the command:
+
+```shell
+deactivate
+```
+
+## uv run vs source .venv/bin/activate
+
+| | uv run <command> | source .venv/bin/activate and <command> |
+| --- | --- | --- |
+| Example command | uv run python script.py | source .venv/bin/activate + python script.py |
+| Activation step | Not required. uv automatically finds, locks, and uses the .venv directory. | Required. Must be typed manually before running any Python files. |
+| Terminal State | Temporary. It only exposes the environment to that specific command. | Persistent. Your terminal prompt changes, and all subsequent python commands target the venv. |
+| Environment check | Dynamic. It verifies and installs missing or outdated dependencies from your lockfile before running. | Static. It blindly runs whatever state the virtual environment is currently in. |
+| Safety | High. Prevents you from accidentally running code in the global python interpreter if you forget to activate. | Moderate. If you open a new tab or forget to source, it defaults back to your global system Python. |
+
+
+
+
 ## Using a script to encrypt plaintext
 
 You don't have to encrypt plaintext manually. This project provides a script that will do it for you:
@@ -892,12 +923,433 @@ The core definition of cipher correctness is that it's a mathematical property s
 
 However, cipher correctness does not mean cipher security. Correctness ensures functionality and reliability (e.g., the message can be read later). Security ensures that unauthorized people cannot read the message even if they intercept it. An algorithm can be completely correct (it encrypts and decrypts fine) but insecure (easy for hackers to break, like the Caesar or Affine Cipher).
 
-That said, this project contains limitations:
+That said, originally this project contained the following limitations:
 
 1. `run_decrypt()` in `decrypt.py` only runs `affine_brute_force`.
 1. There is no coprime validation.
 1. There is no real known-key decrypt path via CLI, deciding on lowercase/non-alphabetic handling, real key args instead of hardcoded.
 1. I can't pick my own key without editing source code.
+
+However, as of `September 13, 2026`, it was further updated, which resulted in the following changes below.
+
+### run_decrypt() in decrypt.py runs affine_decrypt() or affine_brute_force()
+
+Running either `affine_decrypt` or `affine_brute_force` in `run_decrypt()` means that a user doesn't just have the option to pass in `ciphertext` to `run_decrypt()` as initially. Now, the user can run something like:
+
+```shell
+affine-cipher decrypt -a 3 -b 10
+```
+
+which returns:
+
+```shell
+[?] Enter message to decrypt: FWRRA
+[+] Decrypted Text: HELLO
+```
+
+Previously, when only `affine_brute_force(ciphertext)` was called in `run_decrypt`, and `uv run affine-cipher decrypt` was run (in the [Using a script to decrypt ciphertext](#using-a-script-to-decrypt-ciphertext) section), the user had to go through 312 possible outcomes of the decrypted text to find the right one. Now, a clean `Decrypted Text: HELLO` is returned instead.
+
+### coprime validation
+
+The `validate_affine_key` function, located in `key_validation.py`, which is called inside `affine_decrypt()` in `decrypt.py` and `affine_encryption()` in `encrypt.py`, checks `coprime` validation. This adds flexibility to the Affine Cipher. Now, if a user inputs a value of a that is not a `coprime` of 26 (the length of the alphabet), they will know it and can select a value of a until it is actually a coprime of 26. Previously, the values of a and b were hard-coded.
+
+**Coprime validation example:**
+
+```shell
+affine-cipher encrypt -a 2 -b 10
+#which returns:
+[?] Enter text to encrypt: FWRRA
+usage: affine-cipher [-h] {encrypt,decrypt} ...
+affine-cipher: error: This key is invalid. Try again. 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25
+```
+
+### Adding a real known-key decrypt path via CLI
+
+To add a real known-key decrypt path via the CLI, `run_decrypt()` needs to call `affine_decrypt()`, but previously, it only called `affine_brute_force()` and not `affine_decrypt()`. Now it calls either `affine_decrypt()` or `affine_brute_force()`.
+
+I have taken things a step further:
+
+1. The `-a` and `-b` flags are now required for `encrypt` but optional for `decrypt` when paired with `--brute-force`. In other words, either the user can choose `-a` and `-b`, or go with `--brute-force` alone (`affine-cipher decrypt --brute-force`).
+    - However, `affine-cipher decrypt -a 3 -b 10 --brute-force` results in the following:
+
+    ```shell
+    affine-cipher decrypt -a 3 -b 10 --brute-force
+    usage: affine-cipher [-h] {encrypt,decrypt} ...
+    affine-cipher: error: -a and -b and --brute-force cannot all be selected together. Choose either -a and -b or --brute-force.
+
+    ```
+    - If `a` is provided without `-b`, the following happens:
+
+    ```shell
+    affine-cipher decrypt -a 2      
+    usage: affine-cipher [-h] {encrypt,decrypt} ...
+    affine-cipher: error: -a and -b must be given together
+    ```
+
+    - If `b` is provided without `-a`, it returns:
+
+    ```shell
+    affine-cipher decrypt -b 10
+    usage: affine-cipher [-h] {encrypt,decrypt} ...
+    affine-cipher: error: -a and -b must be given together
+    ```
+
+    - If only `--brute-force` is provided, it results in:
+
+    ```shell
+    affine-cipher decrypt --brute-force
+    # which results in:
+    [?] Enter message to decrypt: FWRRA
+    Key a=1, b=0: FWRRA
+    Key a=1, b=1: EVQQZ
+    Key a=1, b=2: DUPPY
+    Key a=1, b=3: CTOOX
+    Key a=1, b=4: BSNNW
+    Key a=1, b=5: ARMMV
+    Key a=1, b=6: ZQLLU
+    Key a=1, b=7: YPKKT
+    Key a=1, b=8: XOJJS
+    Key a=1, b=9: WNIIR
+    Key a=1, b=10: VMHHQ
+    Key a=1, b=11: ULGGP
+    Key a=1, b=12: TKFFO
+    Key a=1, b=13: SJEEN
+    Key a=1, b=14: RIDDM
+    Key a=1, b=15: QHCCL
+    Key a=1, b=16: PGBBK
+    Key a=1, b=17: OFAAJ
+    Key a=1, b=18: NEZZI
+    Key a=1, b=19: MDYYH
+    Key a=1, b=20: LCXXG
+    Key a=1, b=21: KBWWF
+    Key a=1, b=22: JAVVE
+    Key a=1, b=23: IZUUD
+    Key a=1, b=24: HYTTC
+    Key a=1, b=25: GXSSB
+    Key a=3, b=0: TQXXA
+    Key a=3, b=1: KHOOR
+    Key a=3, b=2: BYFFI
+    Key a=3, b=3: SPWWZ
+    Key a=3, b=4: JGNNQ
+    Key a=3, b=5: AXEEH
+    Key a=3, b=6: ROVVY
+    Key a=3, b=7: IFMMP
+    Key a=3, b=8: ZWDDG
+    Key a=3, b=9: QNUUX
+    Key a=3, b=10: HELLO
+    Key a=3, b=11: YVCCF
+    Key a=3, b=12: PMTTW
+    Key a=3, b=13: GDKKN
+    Key a=3, b=14: XUBBE
+    Key a=3, b=15: OLSSV
+    Key a=3, b=16: FCJJM
+    Key a=3, b=17: WTAAD
+    Key a=3, b=18: NKRRU
+    Key a=3, b=19: EBIIL
+    Key a=3, b=20: VSZZC
+    Key a=3, b=21: MJQQT
+    Key a=3, b=22: DAHHK
+    Key a=3, b=23: URYYB
+    Key a=3, b=24: LIPPS
+    Key a=3, b=25: CZGGJ
+    Key a=5, b=0: BUTTA
+    Key a=5, b=1: GZYYF
+    Key a=5, b=2: LEDDK
+    Key a=5, b=3: QJIIP
+    Key a=5, b=4: VONNU
+    Key a=5, b=5: ATSSZ
+    Key a=5, b=6: FYXXE
+    Key a=5, b=7: KDCCJ
+    Key a=5, b=8: PIHHO
+    Key a=5, b=9: UNMMT
+    Key a=5, b=10: ZSRRY
+    Key a=5, b=11: EXWWD
+    Key a=5, b=12: JCBBI
+    Key a=5, b=13: OHGGN
+    Key a=5, b=14: TMLLS
+    Key a=5, b=15: YRQQX
+    Key a=5, b=16: DWVVC
+    Key a=5, b=17: IBAAH
+    Key a=5, b=18: NGFFM
+    Key a=5, b=19: SLKKR
+    Key a=5, b=20: XQPPW
+    Key a=5, b=21: CVUUB
+    Key a=5, b=22: HAZZG
+    Key a=5, b=23: MFEEL
+    Key a=5, b=24: RKJJQ
+    Key a=5, b=25: WPOOV
+    Key a=7, b=0: XSVVA
+    Key a=7, b=1: IDGGL
+    Key a=7, b=2: TORRW
+    Key a=7, b=3: EZCCH
+    Key a=7, b=4: PKNNS
+    Key a=7, b=5: AVYYD
+    Key a=7, b=6: LGJJO
+    Key a=7, b=7: WRUUZ
+    Key a=7, b=8: HCFFK
+    Key a=7, b=9: SNQQV
+    Key a=7, b=10: DYBBG
+    Key a=7, b=11: OJMMR
+    Key a=7, b=12: ZUXXC
+    Key a=7, b=13: KFIIN
+    Key a=7, b=14: VQTTY
+    Key a=7, b=15: GBEEJ
+    Key a=7, b=16: RMPPU
+    Key a=7, b=17: CXAAF
+    Key a=7, b=18: NILLQ
+    Key a=7, b=19: YTWWB
+    Key a=7, b=20: JEHHM
+    Key a=7, b=21: UPSSX
+    Key a=7, b=22: FADDI
+    Key a=7, b=23: QLOOT
+    Key a=7, b=24: BWZZE
+    Key a=7, b=25: MHKKP
+    Key a=9, b=0: POZZA
+    Key a=9, b=1: MLWWX
+    Key a=9, b=2: JITTU
+    Key a=9, b=3: GFQQR
+    Key a=9, b=4: DCNNO
+    Key a=9, b=5: AZKKL
+    Key a=9, b=6: XWHHI
+    Key a=9, b=7: UTEEF
+    Key a=9, b=8: RQBBC
+    Key a=9, b=9: ONYYZ
+    Key a=9, b=10: LKVVW
+    Key a=9, b=11: IHSST
+    Key a=9, b=12: FEPPQ
+    Key a=9, b=13: CBMMN
+    Key a=9, b=14: ZYJJK
+    Key a=9, b=15: WVGGH
+    Key a=9, b=16: TSDDE
+    Key a=9, b=17: QPAAB
+    Key a=9, b=18: NMXXY
+    Key a=9, b=19: KJUUV
+    Key a=9, b=20: HGRRS
+    Key a=9, b=21: EDOOP
+    Key a=9, b=22: BALLM
+    Key a=9, b=23: YXIIJ
+    Key a=9, b=24: VUFFG
+    Key a=9, b=25: SRCCD
+    Key a=11, b=0: RCLLA
+    Key a=11, b=1: YJSSH
+    Key a=11, b=2: FQZZO
+    Key a=11, b=3: MXGGV
+    Key a=11, b=4: TENNC
+    Key a=11, b=5: ALUUJ
+    Key a=11, b=6: HSBBQ
+    Key a=11, b=7: OZIIX
+    Key a=11, b=8: VGPPE
+    Key a=11, b=9: CNWWL
+    Key a=11, b=10: JUDDS
+    Key a=11, b=11: QBKKZ
+    Key a=11, b=12: XIRRG
+    Key a=11, b=13: EPYYN
+    Key a=11, b=14: LWFFU
+    Key a=11, b=15: SDMMB
+    Key a=11, b=16: ZKTTI
+    Key a=11, b=17: GRAAP
+    Key a=11, b=18: NYHHW
+    Key a=11, b=19: UFOOD
+    Key a=11, b=20: BMVVK
+    Key a=11, b=21: ITCCR
+    Key a=11, b=22: PAJJY
+    Key a=11, b=23: WHQQF
+    Key a=11, b=24: DOXXM
+    Key a=11, b=25: KVEET
+    Key a=15, b=0: JYPPA
+    Key a=15, b=1: CRIIT
+    Key a=15, b=2: VKBBM
+    Key a=15, b=3: ODUUF
+    Key a=15, b=4: HWNNY
+    Key a=15, b=5: APGGR
+    Key a=15, b=6: TIZZK
+    Key a=15, b=7: MBSSD
+    Key a=15, b=8: FULLW
+    Key a=15, b=9: YNEEP
+    Key a=15, b=10: RGXXI
+    Key a=15, b=11: KZQQB
+    Key a=15, b=12: DSJJU
+    Key a=15, b=13: WLCCN
+    Key a=15, b=14: PEVVG
+    Key a=15, b=15: IXOOZ
+    Key a=15, b=16: BQHHS
+    Key a=15, b=17: UJAAL
+    Key a=15, b=18: NCTTE
+    Key a=15, b=19: GVMMX
+    Key a=15, b=20: ZOFFQ
+    Key a=15, b=21: SHYYJ
+    Key a=15, b=22: LARRC
+    Key a=15, b=23: ETKKV
+    Key a=15, b=24: XMDDO
+    Key a=15, b=25: QFWWH
+    Key a=17, b=0: LMBBA
+    Key a=17, b=1: OPEED
+    Key a=17, b=2: RSHHG
+    Key a=17, b=3: UVKKJ
+    Key a=17, b=4: XYNNM
+    Key a=17, b=5: ABQQP
+    Key a=17, b=6: DETTS
+    Key a=17, b=7: GHWWV
+    Key a=17, b=8: JKZZY
+    Key a=17, b=9: MNCCB
+    Key a=17, b=10: PQFFE
+    Key a=17, b=11: STIIH
+    Key a=17, b=12: VWLLK
+    Key a=17, b=13: YZOON
+    Key a=17, b=14: BCRRQ
+    Key a=17, b=15: EFUUT
+    Key a=17, b=16: HIXXW
+    Key a=17, b=17: KLAAZ
+    Key a=17, b=18: NODDC
+    Key a=17, b=19: QRGGF
+    Key a=17, b=20: TUJJI
+    Key a=17, b=21: WXMML
+    Key a=17, b=22: ZAPPO
+    Key a=17, b=23: CDSSR
+    Key a=17, b=24: FGVVU
+    Key a=17, b=25: IJYYX
+    Key a=19, b=0: DIFFA
+    Key a=19, b=1: SXUUP
+    Key a=19, b=2: HMJJE
+    Key a=19, b=3: WBYYT
+    Key a=19, b=4: LQNNI
+    Key a=19, b=5: AFCCX
+    Key a=19, b=6: PURRM
+    Key a=19, b=7: EJGGB
+    Key a=19, b=8: TYVVQ
+    Key a=19, b=9: INKKF
+    Key a=19, b=10: XCZZU
+    Key a=19, b=11: MROOJ
+    Key a=19, b=12: BGDDY
+    Key a=19, b=13: QVSSN
+    Key a=19, b=14: FKHHC
+    Key a=19, b=15: UZWWR
+    Key a=19, b=16: JOLLG
+    Key a=19, b=17: YDAAV
+    Key a=19, b=18: NSPPK
+    Key a=19, b=19: CHEEZ
+    Key a=19, b=20: RWTTO
+    Key a=19, b=21: GLIID
+    Key a=19, b=22: VAXXS
+    Key a=19, b=23: KPMMH
+    Key a=19, b=24: ZEBBW
+    Key a=19, b=25: OTQQL
+    Key a=21, b=0: ZGHHA
+    Key a=21, b=1: UBCCV
+    Key a=21, b=2: PWXXQ
+    Key a=21, b=3: KRSSL
+    Key a=21, b=4: FMNNG
+    Key a=21, b=5: AHIIB
+    Key a=21, b=6: VCDDW
+    Key a=21, b=7: QXYYR
+    Key a=21, b=8: LSTTM
+    Key a=21, b=9: GNOOH
+    Key a=21, b=10: BIJJC
+    Key a=21, b=11: WDEEX
+    Key a=21, b=12: RYZZS
+    Key a=21, b=13: MTUUN
+    Key a=21, b=14: HOPPI
+    Key a=21, b=15: CJKKD
+    Key a=21, b=16: XEFFY
+    Key a=21, b=17: SZAAT
+    Key a=21, b=18: NUVVO
+    Key a=21, b=19: IPQQJ
+    Key a=21, b=20: DKLLE
+    Key a=21, b=21: YFGGZ
+    Key a=21, b=22: TABBU
+    Key a=21, b=23: OVWWP
+    Key a=21, b=24: JQRRK
+    Key a=21, b=25: ELMMF
+    Key a=23, b=0: HKDDA
+    Key a=23, b=1: QTMMJ
+    Key a=23, b=2: ZCVVS
+    Key a=23, b=3: ILEEB
+    Key a=23, b=4: RUNNK
+    Key a=23, b=5: ADWWT
+    Key a=23, b=6: JMFFC
+    Key a=23, b=7: SVOOL
+    Key a=23, b=8: BEXXU
+    Key a=23, b=9: KNGGD
+    Key a=23, b=10: TWPPM
+    Key a=23, b=11: CFYYV
+    Key a=23, b=12: LOHHE
+    Key a=23, b=13: UXQQN
+    Key a=23, b=14: DGZZW
+    Key a=23, b=15: MPIIF
+    Key a=23, b=16: VYRRO
+    Key a=23, b=17: EHAAX
+    Key a=23, b=18: NQJJG
+    Key a=23, b=19: WZSSP
+    Key a=23, b=20: FIBBY
+    Key a=23, b=21: ORKKH
+    Key a=23, b=22: XATTQ
+    Key a=23, b=23: GJCCZ
+    Key a=23, b=24: PSLLI
+    Key a=23, b=25: YBUUR
+    Key a=25, b=0: VEJJA
+    Key a=25, b=1: WFKKB
+    Key a=25, b=2: XGLLC
+    Key a=25, b=3: YHMMD
+    Key a=25, b=4: ZINNE
+    Key a=25, b=5: AJOOF
+    Key a=25, b=6: BKPPG
+    Key a=25, b=7: CLQQH
+    Key a=25, b=8: DMRRI
+    Key a=25, b=9: ENSSJ
+    Key a=25, b=10: FOTTK
+    Key a=25, b=11: GPUUL
+    Key a=25, b=12: HQVVM
+    Key a=25, b=13: IRWWN
+    Key a=25, b=14: JSXXO
+    Key a=25, b=15: KTYYP
+    Key a=25, b=16: LUZZQ
+    Key a=25, b=17: MVAAR
+    Key a=25, b=18: NWBBS
+    Key a=25, b=19: OXCCT
+    Key a=25, b=20: PYDDU
+    Key a=25, b=21: QZEEV
+    Key a=25, b=22: RAFFW
+    Key a=25, b=23: SBGGX
+    Key a=25, b=24: TCHHY
+    Key a=25, b=25: UDIIZ
+    ```
+    - If only `affine-cipher decrypt` is provided:
+
+    ```shell
+    affine-cipher decrypt
+    [?] Enter message to decrypt: FWRRA
+    usage: affine-cipher [-h] {encrypt,decrypt} ...
+    affine-cipher: error: Please either supply a key or --brute-force.
+    ```
+
+1. The `coprimality validation error` is triggered when a user does not provide a value of `a` that shares only the integer 1 as a positive integer factor in common with the value of `m`, which is 26. 
+    - The error message itself is `This key is invalid. Try again. 1, 3, 5, 7, 9, 11, 15, 17, 19, 21, 23, 25`.
+1. Now, unlike previously, it is not necessary to only input `plaintext` uppercase letters when encrypting or `ciphertext` uppercase letters when decrypting. Both uppercase and lowercase letters are accepted.
+    - The addition of `case.py` contains the `restore_char_case()` function, which preserves each character's original case in the output. In the original code, if a character was not uppercase, it would not be encrypted. For example:
+
+    ```shell
+    Hello World! 123 -> Fello Yorld! 123
+    ```
+
+    Now:
+
+    ```shell
+    uv run affine-cipher encrypt -a 3 -b 10
+    [?] Enter text to encrypt: Winter weather
+    [+] Plaintext: Winter weather
+    [+] Encrypted Text: Yixpwj ywkpfwj
+    ```
+
+## affine-cipher decrypt commands
+
+| Command | Result |
+| --- | --- |
+| `affine-cipher decrypt -a 3 -b 10` | Known-key decrypt (direct) |
+| `affine-cipher decrypt --brute-force` | Brute-force all coprime keys |
+| `affine-cipher decrypt -a 3 -b 10 --brute-force` | Error: mutually exclusive |
+| `affine-cipher decrypt -a 2` | Error: -a/-b must be given together |
+| `affine-cipher decrypt -b 10` | Error: -a/-b must be given together |
+| `affine-cipher decrypt` | Error: must supply a key or --brute-force |
 
 ## Workflow & Tooling
 
@@ -905,55 +1357,55 @@ That said, this project contains limitations:
 
 | Tool | Purpose | Configured in |
 | --- | --- | --- |
-| ruff | lint + format | pyproject.toml/<div>[tool.ruff]</div><div>target-version = "py314"</div><div>line-length = 88</div><div>[tool.ruff.lint]</div><div>select = ["E", "F", "I", "UP", "B"]</div> |
-| mypy | checks/verifies standard type hints in Python code | pyproject.toml/<div>[tool.mypy]</div><div>python_version = "3.14"</div><div>disallow_untyped_defs = true</div> |
+| `ruff` | lint + format | pyproject.toml/<div>[tool.ruff]</div><div>target-version = "py314"</div><div>line-length = 88</div><div>[tool.ruff.lint]</div><div>select = ["E", "F", "I", "UP", "B"]</div> |
+| `mypy` | checks/verifies standard type hints in Python code | pyproject.toml/<div>[tool.mypy]</div><div>python_version = "3.14"</div><div>disallow_untyped_defs = true</div> |
 
 ### Testing
 
-| Tool | Purpose | Configured in |
+| Task | `uv run pytest` | `pytest`[^2] |
 | --- | --- | --- |
-| pytest | test runner/framework | pyproject.toml/<div>[tool.pytest.ini_options]</div> |
-| pytest-cov | the coverage plugin measuring branch and statement coverage | pyproject.toml/<div>[tool.coverage.run]</div><div>[tool.coverage.report]</div> |
+| Run the whole suite | `uv run pytest` | `pytest` |
+| Run one file | `uv run pytest tests/test_encrypt.py` | `pytest tests/test_encrypt.py` |
+| Run one test function | `uv run pytest tests/test_encrypt.py::test_run_encrypt` | `pytest tests/test_encrypt.py::test_run_encrypt` |
+| Run tests matching a keyword | `uv run pytest -k "coprime"` | `pytest -k "coprime"` |
+| Coverage, terminal | `uv run pytest --cov=affine_cipher --cov-report=term-missing` | `pytest --cov=affine_cipher --cov-report=term-missing` |
+| Coverage, terminal + html | `uv run pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html` | `pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html` |
+| Coverage, matches CI exactly | `uv run pytest --cov=affine_cipher --cov-report=term-missing --cov-report=xml` | `pytest --cov=affine_cipher --cov-report=term-missing --cov-report=xml` |
+| Debug a failure interactively | `uv run pytest -x --pdb` | `pytest -x --pdb` |
 
-**Testing commands:**
-
-```shell
-# terminal report:
-pytest --cov=affine_cipher --cov-report=term-missing
-# terminal + html report:
-pytest --cov=affine_cipher --cov-report=term-missing --cov-report=html
-```
 
 ### Security
 
 | Tool | Purpose | Configured in |
 | --- | --- | --- |
-| bandit | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
-| pip-audit | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div>
+| `bandit` | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
+| `pip-audit` | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div> |
 
 ### Pre-commit hooks
 
 | Hook | Purpose | Configured in |
 | --- | --- | --- |
-| ruff-check | primary command used to run the Ruff Linter on Python projects | .pre-commit-config.yaml/<div>- id: ruff-check</div><div>&nbsp;&nbsp;args: [--fix]</div> |
-| ruff-format | automatically formats Python code | .pre-commit-config.yaml/<div>- id: ruff-format</div> |
-| mypy | checks/verifies standard type hints in Python code | .pre-commit-config.yaml/<div>- id: mypy</div><div>&nbsp;&nbsp;additional_dependencies: [types-colorama]</div> |
-| pytest | runs Python tests against the Python code | .pre-commit-config.yaml/<div>- id: pytest</div><div>&nbsp;&nbsp;name: pytest</div><div>&nbsp;&nbsp;entry: uv run pytest</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;always_run: true</div> |
-| bandit | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
-| pip-audit | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div> |
+| `ruff-check` | primary command used to run the Ruff Linter on Python projects | .pre-commit-config.yaml/<div>- id: ruff-check</div><div>&nbsp;&nbsp;args: [--fix]</div> |
+| `ruff-format` | automatically formats Python code | .pre-commit-config.yaml/<div>- id: ruff-format</div> |
+| `mypy` | checks/verifies standard type hints in Python code | .pre-commit-config.yaml/<div>- id: mypy</div><div>&nbsp;&nbsp;additional_dependencies: [types-colorama]</div> |
+| `pytest` | runs Python tests against the Python code | .pre-commit-config.yaml/<div>- id: pytest</div><div>&nbsp;&nbsp;name: pytest</div><div>&nbsp;&nbsp;entry: uv run pytest</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;always_run: true</div> |
+| `bandit` | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
+| `pip-audit` | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div> |
 
 ### CI/CD
 
 GitHub Actions runs on every push and pull request to `main` (`.github/workflows/ci.yml`), via two jobs:
 
-- `lint-and-test`: runs the checks from the tables above against every commit. `ruff check` and `ruff format --check` (lint & format), `mypy .` (type checking), `pytest` with coverage reporting (`--cov=affine_cipher --cov-report=term-missing --cov-report=xml`), `bandit -r src` (security static analysis), and `pip-audit` (dependency vulnerability scanning). Environment setup uses `astral-sh/setup-uv` + `uv sync --all-extras --dev --frozen` for a reproducible install.
+- `lint-and-test`: runs the checks from the tables above against every commit. `ruff check` and `ruff format --check` (lint & format), `mypy .` (type checking), `pytest --cov=affine_cipher --cov-report=term-missing --cov-report=xml` (tests + coverage), `bandit -r src` (security static analysis), and `pip-audit` (dependency vulnerability scanning). Environment setup uses `astral-sh/setup-uv` + `uv sync --all-extras --dev --frozen` for a reproducible install.
 - `build`: runs `uv build` to produce a wheel, as a preview of the (currently deferred) Publish to PyPI work.
 
 `permissions: contents: read` scopes the workflow's token down to read-only, and a `concurrency` group cancels stale runs when new commits land on the same branch.
 
 ## Footnotes
 
-[^1]: Being a `coprime` of an integer means having no positive integer factors in common, aside from 1.
+[^1]: Two integers are `coprime` if they share no positive factor in common, aside from 1.
+
+[^2]: The `pytest`-only column assumes an already-activated virtual environment; see the "uv run vs source .venv/bin/activate" comparison for what that requires.
 
 
 

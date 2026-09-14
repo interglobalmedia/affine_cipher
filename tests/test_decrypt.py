@@ -32,9 +32,9 @@ def test_affine_decrypt_with_known_key_quartz() -> None:
     assert result == "QUARTZ"
 
 
-def test_affine_decrypt_lowercase_passthrough() -> None:
+def test_affine_decrypt_lowercase_case_preserved() -> None:
 
-    result = affine_decrypt("bollix", 3, 10)
+    result = affine_decrypt("narrib", 3, 10)
 
     assert result == "bollix"
 
@@ -86,8 +86,26 @@ def test_run_decrypt(
 
     monkeypatch.setattr("builtins.input", mock_input)
 
-    run_decrypt()
+    run_decrypt(None, None, True)
 
     captured = capsys.readouterr()
 
     assert "Key a=3, b=10: HELLO" in captured.out
+
+
+def test_run_decrypt_missing_key_missing_brute_force(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+
+    monkeypatch.setattr("builtins.input", lambda *args: "FWRRA")
+
+    with pytest.raises(ValueError):
+        run_decrypt(None, None, False)
+
+
+def test_run_decrypt_invalid_key(monkeypatch: pytest.MonkeyPatch) -> None:
+
+    monkeypatch.setattr("builtins.input", lambda *args: "FWRRA")
+
+    with pytest.raises(ValueError):
+        run_decrypt(2, 26, False)
