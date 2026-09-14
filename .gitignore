@@ -18,3 +18,5 @@ src/.DS_Store
 
 coverage.xml
 dist/
+
+.vscode/
