@@ -32,6 +32,7 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
     - [Security](#security)
     - [Pre-commit hooks](#pre-commit-hooks)
     - [CI/CD](#cicd)
+- [Installation via PyPI](#installation-via-pypi)
 - [Footnotes](#footnotes)
 
 
@@ -1400,6 +1401,22 @@ GitHub Actions runs on every push and pull request to `main` (`.github/workflows
 - `build`: runs `uv build` to produce a wheel, as a preview of the (currently deferred) Publish to PyPI work.
 
 `permissions: contents: read` scopes the workflow's token down to read-only, and a `concurrency` group cancels stale runs when new commits land on the same branch.
+
+## Installation via PyPI
+
+As of v0.1.0, `affine-cipher` is published on [PyPI](https://pypi.org/project/affine-cipher/):
+
+```shell
+pip install affine-cipher
+```
+
+Or run it directly without a persistent install, via `uv`:
+
+```shell
+uvx affine-cipher encrypt -a 3 -b 10
+```
+
+Once installed, `affine-cipher` works exactly as described throughout this README (`encrypt`/`decrypt` subcommands, `-a`/`-b`, `--brute-force`), no `uv run` prefix and no local clone needed.
 
 ## Footnotes
 
