@@ -10,6 +10,7 @@ concurrency:
   cancel-in-progress: false
 jobs:
   lint-and-test:
+    name: Lint and test
     runs-on: ubuntu-26.04
     steps:
       - name: Checkout source code
@@ -40,6 +41,7 @@ jobs:
       - name: Run pip-audit
         run: uv run pip-audit
   build:
+    name: Build
     needs: lint-and-test
     runs-on: ubuntu-26.04
     steps:
@@ -64,6 +66,7 @@ jobs:
           name: dist
           path: dist/
   publish:
+    name: Publish to PyPI
     needs: build
     runs-on: ubuntu-26.04
     environment:
