@@ -1,0 +1,78 @@
+name: publish
+on:
+  push:
+    tags:
+      - "v*"
+permissions:
+  contents: read
+jobs:
+  lint-and-test:
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ".python-version"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.0.0
+        with:
+          enable-cache: false
+          version-file: "pyproject.toml"
+      - name: Install dependencies
+        run: uv sync --all-extras --dev --frozen
+      - name: Run ruff lint
+        run: uv run ruff check src tests
+      - name: Run ruff format check
+        run: uv run ruff format --check src tests
+      - name: Run mypy
+        run: uv run mypy .
+      - name: Test with pytest
+        run: uv run pytest tests --cov=affine_cipher --cov-report=term-missing --cov-report=xml
+      - name: Run bandit
+        run: uv run bandit -r src
+      - name: Run pip-audit
+        run: uv run pip-audit
+  build:
+    needs: lint-and-test
+    runs-on: ubuntu-26.04
+    steps:
+      - name: Checkout source code
+        uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - name: Set up python
+        uses: actions/setup-python@v7
+        with:
+          python-version-file: ".python-version"
+      - name: Set up uv
+        uses: astral-sh/setup-uv@v10.0.0
+        with:
+          enable-cache: false
+          version-file: "pyproject.toml"
+      - name: Build sdist and wheel
+        run: uv build
+      - name: Upload dist
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+  publish:
+    needs: build
+    runs-on: ubuntu-26.04
+    environment:
+      name: pypi
+      url: https://pypi.org/p/affine-cipher
+    permissions:
+      id-token: write
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v8
+        with:
+          name: dist
+          path: dist/
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
