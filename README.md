@@ -68,32 +68,37 @@ To view the original project, please visit [commit a2b3ddb](https://github.com/i
 
 ### Project structure
 
-If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|output.txt|git-commit-messages.md|.pytest_cache|.ruff_cache|.mypy_cache|.DS_Store|.git|.venv|__pycache__|coverage.xml|dist' from the command line, filtering out the noise this diagram excludes, it results in the following:
+If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|output.txt|git-commit-messages.md|.pytest_cache|.ruff_cache|.mypy_cache|.DS_Store|.git|.venv|__pycache__|coverage.xml|dist|.vscode' from the command line, filtering out the noise this diagram excludes, it results in the following:
 
 ```
 .
 ├── .github
-│   └── workflows
-│       └── ci.yml
+│   └── workflows
+│       ├── ci.yml
+│       └── publish.yml
 ├── .gitignore
 ├── .pre-commit-config.yaml
 ├── .python-version
-├── README.md
+├── LICENSE
 ├── pyproject.toml
+├── README.md
 ├── src
-│   └── affine_cipher
-│       ├── __init__.py
-│       ├── cli.py
-│       ├── decrypt.py
-│       └── encrypt.py
+│   └── affine_cipher
+│       ├── __init__.py
+│       ├── case.py
+│       ├── cli.py
+│       ├── decrypt.py
+│       ├── encrypt.py
+│       └── key_validation.py
 ├── tests
-│   ├── test_cli.py
-│   ├── test_decrypt.py
-│   ├── test_encrypt.py
-│   └── test_roundtrip.py
+│   ├── test_cli.py
+│   ├── test_decrypt.py
+│   ├── test_encrypt.py
+│   ├── test_key_validation.py
+│   └── test_roundtrip.py
 └── uv.lock
 
-6 directories, 15 files
+6 directories, 20 files
 ```
 
 ### encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py
