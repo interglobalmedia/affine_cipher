@@ -12,6 +12,7 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
     - [encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py](#encrypt_affine_cypherpy---srcaffine_cipherencryptpy)
         - [src/affine_cipher/encrypt.py](#srcaffine_cipherencryptpy)
     - [decrypt_affine_cipher.py -> src/affine_cipher/decrypt.py](#decrypt_affine_cipherpy---srcaffine_cipherdecryptpy)
+        - [src/affine_cipher/decrypt.py](#srcaffine_cipherdecryptpy)
     - [src/affine_cipher/cli.py](#srcaffine_cipherclipy)
 - [Mathematical function to encrypt the plaintext manually](#mathematical-function-to-encrypt-the-plaintext-manually)
     - [Affine Cipher encryption example](#affine-cipher-encryption-example)
@@ -230,100 +231,21 @@ ciphertext = input(f'{Fore.GREEN}[?] Enter message to decrypt: ')
 affine_brute_force(ciphertext)
 ```
 
-```
-# src/affine_cipher/decrypt.py
+#### src/affine_cipher/decrypt.py
 
-import string
+The current `src/affine_cipher/decrypt.py` has changed since its original `decrypt_affine_cipher.py` implementation. The following changes took place in the code:
 
-from colorama import Fore, init
+- The current `run_decrypt(a, b, brute_force)` gets the key from the `-a` and `-b` flags or `--brute-force` instead of always brute-forcing. In other words, it has three paths: with a key, it decrypts. With `--brute-force`, it brute-forces. With neither, it raises an error.
+- `affine_decrypt()` calls `validate_affine_key()` from `key_validation.py`, so a non-coprime `a` raises an error.
+- Lowercase letters are now decrypted too. Each character is uppercased to find its position, then `restore_char_case()` from `case.py` puts its original case back.
 
-
-# Function to get the Euclidean Algorithm
-def extended_gcd(a: int, b: int) -> tuple[int, int, int]:
-    """
-    extended Euclidean Algorithm to find the greatest common divisor and
-    coefficients x, y such that ax + by = gcd(a, b)
-    """
-    if a == 0:
-        return (b, 0, 1)
-    else:
-        g, x, y = extended_gcd(b % a, a)
-        return (g, y - (b // a) * x, x)
-
-
-# function to get the modular inverse
-def modular_inverse(a: int, m: int) -> int:
-    """
-    Compute the modular multiplicative inverse of a modulo m.
-    Raises an exception if the modular inverse does not exist.
-    """
-    g, x, y = extended_gcd(a, m)
-    if g != 1:
-        raise ValueError("Modular inverse does not exist!")
-    else:
-        return x % m
-
-
-# Function to decrypt our message
-def affine_decrypt(ciphertext: str, a: int, b: int) -> str:
-    """
-    Decrypt a message with the Affine Cipher using the given key components a and b.
-    """
-    alphabet = string.ascii_uppercase
-    m = len(alphabet)
-    plaintext = ""
-    # Compute the multiplicative inverse of a
-    a_inv = modular_inverse(a, m)
-    # Iterate through each character in the ciphertext
-    for char in ciphertext:
-        # Check if the character is in the alphabet
-        if char in alphabet:
-            # If it's an alphabet letter, decrypt it
-            # Find the index of the character in the alphabet
-            c = alphabet.index(char)
-            # Apply the decryption formula: a_inv * (c - b) mod m
-            p = (a_inv * (c - b)) % m
-            # Append the decrypted character to the plaintext
-            plaintext += alphabet[p]
-        else:
-            # If the character is not in the alphabet, keep it unchanged
-            plaintext += char
-    # Return the decrypted plaintext
-    return plaintext
-
-
-# Function to perform brute-force attack
-def affine_brute_force(ciphertext: str) -> None:
-    """
-    Brute-force attack to find possible keys for an Affine Cipher and print
-    potential decryptions for manual inspection.
-    """
-    alphabet = string.ascii_uppercase
-    m = len(alphabet)
-    # Iterate through possible values for a
-    for a in range(1, m):
-        # Ensure a and m are coprime
-        if extended_gcd(a, m)[0] == 1:
-            # Iterate through possible values for b
-            for b in range(0, m):
-                # Decrypt using the current key
-                decrypted_text = affine_decrypt(ciphertext, a, b)
-                # Print potential decryption for manual inspection
-                print(f"Key a={a}, b={b}: {decrypted_text}")
-
-
-def run_decrypt() -> None:
-    # Initialize colorama
-    init()
-
-    ciphertext = input(f"{Fore.GREEN}[?] Enter message to decrypt: ")
-    # Perform a brute-force attack to find a potential decrypted message.
-    affine_brute_force(ciphertext)
-```
+To view the current `src/affine_cipher/decrypt.py` file, please visit [src/affine_cipher/decrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/decrypt.py) in the affine_cipher GitHub repository.
 
 ### src/affine_cipher/cli.py
 
 ```
+# src/affine_cipher/cli.py
+
 import argparse
 
 from affine_cipher.decrypt import run_decrypt
