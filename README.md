@@ -56,7 +56,7 @@ python decrypt_affine_cipher.py
 
 No workflows, no linting, no testing, no dependencies installed except colorama and no dependency file (`colorama` isn't pinned anywhere). There was even a filename inconsistency.
 
-`encrypt_affine_cypher.py` encrypted with a hardcoded (`a=3, b=10`) entered via `input()`. Only uppercase letters were transformed, everything else (including lowercase) passed through unchanged. There was no check that `a` and 26 were `coprime`.
+`encrypt_affine_cypher.py` encrypted with a hardcoded key (`a=3, b=10`) written directly into the source code, and the plaintext was typed by the user at the `[?] Enter text to encrypt:` prompt, which is what `input()` does. Only uppercase letters were transformed, everything else (including lowercase) passed through unchanged. There was no check that `a` and 26 were `coprime`.
 
 `decrypt_affine_cipher.py` contained the real math, but the script only ever called `affine_brute_force`. There was no path to decrypt with a known key.
 
@@ -444,7 +444,7 @@ c = 0 -> A
 
 Manually decrypting the ciphertext into plaintext is more complicated than encrypting the plaintext into ciphertext.
 
-The mathematical function used to manually decrypt the the ciphertext:
+The mathematical function used to manually decrypt the ciphertext:
 
 ```
 p = a⁻¹ * (c - b) mod 26
@@ -513,7 +513,7 @@ p = 9 * (17 - 10) mod 26
 
 p = 9 * (7) mod 26 = 63 mod 26
 
-p = 63 mod 26 = 2 -> 63 - 52 (26 * 2) = 11
+p = 63 mod 26 -> 63 - 52 (26 * 2) = 11
 
 11 = L
 ```
@@ -527,7 +527,7 @@ p = 9 * (17 - 10) mod 26
 
 p = 9 * (7) mod 26 = 63 mod 26
 
-p = 63 mod 26 = 2 -> 63 - 52 (26 * 2) = 11
+p = 63 mod 26 -> 63 - 52 (26 * 2) = 11
 
 11 = L
 ```
@@ -598,7 +598,7 @@ This returns:
 
 ## Using a script to decrypt ciphertext
 
-You don't have to decrypt plaintext manually. This project provides a script that will do it for you:
+You don't have to decrypt ciphertext manually. This project provides a script that will do it for you:
 
 ```shell
 uv run affine-cipher decrypt # then press return
