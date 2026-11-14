@@ -10,6 +10,7 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
 - [Current state of the project](#current-state-of-the-project)
     - [Project structure](#project-structure)
     - [encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py](#encrypt_affine_cypherpy---srcaffine_cipherencryptpy)
+        - [src/affine_cipher/encrypt.py](#srcaffine_cipherencryptpy)
     - [decrypt_affine_cipher.py -> src/affine_cipher/decrypt.py](#decrypt_affine_cipherpy---srcaffine_cipherdecryptpy)
     - [src/affine_cipher/cli.py](#srcaffine_cipherclipy)
 - [Mathematical function to encrypt the plaintext manually](#mathematical-function-to-encrypt-the-plaintext-manually)
@@ -93,6 +94,7 @@ If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|o
 
 6 directories, 15 files
 ```
+
 ### encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py
 
 ```
@@ -138,54 +140,15 @@ print(f'{Fore.MAGENTA}[+] Plaintext: {plaintext}')
 print(f'{Fore.GREEN}[+] Encrypted Text: {encrypted_text} ')
 ```
 
-```
-# src/affine_cipher/encrypt.py
+#### src/affine_cipher/encrypt.py
 
-import string
+The current `src/affine_cipher/encrypt.py` has changed since its original `encrypt_affine_cypher.py` implementation. The following changes took place in the code:
 
-from colorama import Fore, init
+- `run_encrypt(a, b)` gets the key from the `-a` and `-b` flags instead of hardcoding `a = 3` and `b = 10`.
+- `affine_encryption()` calls `validate_affine_key()` from `key_validation.py`, so a non-coprime `a` raises an error.
+- Lowercase letters are now encrypted too. Each character is uppercased to find its position, then `restore_char_case()` from `case.py` puts its original case back.
 
-
-def affine_encryption(plaintext: str, a: int, b: int) -> str:
-    # Define the uppercase alphabet.
-    alphabet = string.ascii_uppercase
-    # Get the length of the alphabet
-    m = len(alphabet)
-    # Initialize an empty string to store the ciphertext.
-    ciphertext = ""
-    # Iterate through each character in the plaintext.
-    for char in plaintext:
-        # Check if the character is in the alphabet.
-        if char in alphabet:
-            # If it's an alphabet letter, encrypt it.
-            # Find the index of the character in the alphabet.
-            p = alphabet.index(char)
-            # Apply the encryption formula: (a * p + b) mod m.
-            c = (a * p + b) % m
-            # Append the encrypted character to the ciphertext.
-            ciphertext += alphabet[c]
-        else:
-            # If the character is not in the alphabet, keep it unchanged.
-            ciphertext += char
-    # Return the encrypted ciphertext.
-    return ciphertext
-
-
-def run_encrypt() -> None:
-
-    # Initialize Colorama
-    init()
-
-    # Define the plaintext and key components
-    plaintext = input(f"{Fore.GREEN}[?] Enter text to encrypt: ")
-    a = 3
-    b = 10
-    # Call the affine_crypt function with the specified parameters
-    encrypted_text = affine_encryption(plaintext, a, b)
-    # Print the original plaintext, the key components, and the encrypted text
-    print(f"{Fore.MAGENTA}[+] Plaintext: {plaintext}")
-    print(f"{Fore.GREEN}[+] Encrypted Text: {encrypted_text} ")
-```
+To view the current `src/affine_cipher/encrypt.py` file, please visit [src/affine_cipher/encrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/encrypt.py) in the affine_cipher GitHub repository.
 
 ### decrypt_affine_cipher.py -> src/affine_cipher/decrypt.py
 
