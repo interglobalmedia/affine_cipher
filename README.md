@@ -76,6 +76,7 @@ If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|o
 ```
 .
 ├── .github
+│   ├── dependabot.yml
 │   └── workflows
 │       ├── ci.yml
 │       └── publish.yml
@@ -101,7 +102,7 @@ If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|o
 │   └── test_roundtrip.py
 └── uv.lock
 
-6 directories, 20 files
+6 directories, 21 files
 ```
 
 ### encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py
@@ -157,7 +158,7 @@ The current `src/affine_cipher/encrypt.py` has changed since its original `encry
 - `affine_encryption()` calls `validate_affine_key()` from `key_validation.py`, so a non-coprime `a` raises an error.
 - Lowercase letters are now encrypted too. Each character is uppercased to find its position, then `restore_char_case()` from `case.py` puts its original case back.
 
-To view the current `src/affine_cipher/encrypt.py` file, please visit [src/affine_cipher/encrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/encrypt.py) in the affine_cipher GitHub repository.
+To view the current `src/affine_cipher/encrypt.py` file, please visit [src/affine_cipher/encrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.2/src/affine_cipher/encrypt.py) in the affine_cipher GitHub repository.
 
 ### decrypt_affine_cipher.py -> src/affine_cipher/decrypt.py
 
@@ -247,13 +248,13 @@ The current `src/affine_cipher/decrypt.py` has changed since its original `decry
 - `affine_decrypt()` calls `validate_affine_key()` from `key_validation.py`, so a non-coprime `a` raises an error.
 - Lowercase letters are now decrypted too. Each character is uppercased to find its position, then `restore_char_case()` from `case.py` puts its original case back.
 
-To view the current `src/affine_cipher/decrypt.py` file, please visit [src/affine_cipher/decrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/decrypt.py) in the affine_cipher GitHub repository.
+To view the current `src/affine_cipher/decrypt.py` file, please visit [src/affine_cipher/decrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.2/src/affine_cipher/decrypt.py) in the affine_cipher GitHub repository.
 
 ### src/affine_cipher/cli.py
 
 `src/affine_cipher/cli.py` did not exist in the original application. It is the file that sets the `-a` and `-b` flags for `run_encrypt()` and `run_decrypt()` calls and `--brute-force` for `run_decrypt()`.
 
-To view the current `src/affine_cipher/cli.py` file, please visit [src/affine_cipher/cli.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/cli.py) in the affine_cipher GitHub repository.
+To view the current `src/affine_cipher/cli.py` file, please visit [src/affine_cipher/cli.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.2/src/affine_cipher/cli.py) in the affine_cipher GitHub repository.
 
 ## Mathematical function to encrypt the plaintext manually
 
@@ -942,7 +943,7 @@ I have taken things a step further:
 | --- | --- | --- |
 | `bandit` | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
 | `pip-audit` | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div> |
-| `zizmor` | static analysis tool for GitHub Actions that helps identify and fix security issues in CI/CD setups | Not configured, run manually with `uvx zizmor --persona=auditor .github/workflows/` |
+| `zizmor` | static analysis tool for GitHub Actions that helps identify and fix security issues in CI/CD setups | Not configured, run manually with `uvx zizmor --persona=auditor .github/` |
 
 ### Pre-commit hooks
 
