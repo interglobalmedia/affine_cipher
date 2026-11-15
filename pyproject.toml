@@ -1,6 +1,6 @@
 [project]
 name = "affine-cipher"
-version = "0.1.0"
+version = "0.1.1"
 description = "A command-line affine cipher tool for encrypting and decrypting text, with case-preserving transforms and known-key or brute-force decryption."
 license = "MIT"
 license-files = ["LICENSE"]
