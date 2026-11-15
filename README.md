@@ -34,7 +34,10 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
     - [Security](#security)
     - [Pre-commit hooks](#pre-commit-hooks)
     - [CI/CD](#cicd)
+        - [ci.yml](#ciyml)
+        - [publish.yml](#publishyml)
 - [Installation via PyPI](#installation-via-pypi)
+    - [How releases are published](#how-releases-are-published)
 - [Footnotes](#footnotes)
 
 
@@ -939,6 +942,7 @@ I have taken things a step further:
 | --- | --- | --- |
 | `bandit` | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
 | `pip-audit` | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div> |
+| `zizmor` | static analysis tool for GitHub Actions that helps identify and fix security issues in CI/CD setups | Not configured, run manually with `uvx zizmor --persona=auditor .github/workflows/` |
 
 ### Pre-commit hooks
 
@@ -953,12 +957,30 @@ I have taken things a step further:
 
 ### CI/CD
 
-GitHub Actions runs on every push and pull request to `main` (`.github/workflows/ci.yml`), via two jobs:
+GitHub Actions for `ci.yml` runs on every push and pull request to `main`. GitHub Actions for `publish.yml` runs only when a `v*` tag is pushed.
 
-- `lint-and-test`: runs the checks from the tables above against every commit. `ruff check` and `ruff format --check` (lint & format), `mypy .` (type checking), `pytest --cov=affine_cipher --cov-report=term-missing --cov-report=xml` (tests + coverage), `bandit -r src` (security static analysis), and `pip-audit` (dependency vulnerability scanning). Environment setup uses `astral-sh/setup-uv` + `uv sync --all-extras --dev --frozen` for a reproducible install.
-- `build`: runs `uv build` to produce a wheel, as a preview of the (currently deferred) Publish to PyPI work.
+Both `ci.yml` and `publish.yml` contain SHA-pinned actions, `persist-credentials: false`, and `permissions: contents: read`.
 
-`permissions: contents: read` scopes the workflow's token down to read-only, and a `concurrency` group cancels stale runs when new commits land on the same branch.
+#### ci.yml
+
+- When it runs: every push and pull request to `main`.
+- Its two jobs: 
+    - Lint and test: runs the checks from the tables above against every commit. `ruff check` and `ruff format --check` (lint & format), `mypy .` (type checking), `pytest --cov=affine_cipher --cov-report=term-missing --cov-report=xml` (tests + coverage), `bandit -r src` (security static analysis), and `pip-audit` (dependency vulnerability scanning). Environment setup uses `astral-sh/setup-uv` + `uv sync --all-extras --dev --frozen` for a reproducible install. `actions/checkout` pinned to the commit for `v7.0.1`, `actions/setup-python` pinned to the commit for `v7.1.0`, and `astral-sh/setup-uv` pinned to the commit for `v10.3.3`.
+    - Build: `uv build`, producing an `sdist` and a `wheel`. `actions/checkout` pinned to the commit for `v7.0.1`, `actions/setup-python` pinned to the commit for `v7.1.0`, and `astral-sh/setup-uv` pinned to the commit for `v10.3.3`.
+- `permissions: contents: read` scopes the workflow's token down to read-only.
+- `concurrency` group cancels stale runs when new commits land on the same branch.
+- caching enabled (`enable-cache: true`): the cache is pruned at the end of each job (`uv cache prune --ci`) to keep it small. This makes everyday CI run faster.
+
+#### publish.yml
+
+- When it runs: only when a `v*` tag is pushed.
+- Its three jobs: 
+    - Lint and test: `ruff check` and `ruff format --check` (lint & format), `mypy .` (type checking), `pytest --cov=affine_cipher --cov-report=term-missing --cov-report=xml` (tests + coverage), `bandit -r src` (security static analysis), and `pip-audit` (dependency vulnerability scanning). Environment setup uses `astral-sh/setup-uv` + `uv sync --all-extras --dev --frozen` for a reproducible install. `actions/checkout` pinned to the commit for `v7.0.1`, `actions/setup-python` pinned to the commit for `v7.1.0`, and `astral-sh/setup-uv` pinned to the commit for `v10.3.3`.
+    - Build: the same `uv build`, plus uploading `dist/` as an artifact for the next job. `actions/checkout` pinned to the commit for `v7.0.1`, `actions/setup-python` pinned to the commit for `v7.1.0`, `astral-sh/setup-uv` pinned to the commit for `v10.3.3`, and `actions/upload-artifact` pinned to the commit for `v7.0.2`.
+    - Publish to PyPI: downloads the `dist` artifact, runs in the `pypi` environment, is the only job with `id-token: write`, publishes with `pypa/gh-action-pypi-publish` using Trusted Publishing, with no stored API token. `actions/download-artifact` pinned to the commit for `v8.0.2`, and `pypa/gh-action-pypi-publish` pinned to the commit for `v1.14.3`.
+- `permissions: contents: read` scopes the workflow's token down to read-only.
+- `concurrency` group has `cancel-in-progress` set to `false`, so a release is never cancelled partway through.
+- caching disabled (`enable-cache: false`): in both `Lint and test` and `Build`, so a release never reuses anything from earlier runs, which protects against cache poisoning.
 
 ## Installation via PyPI
 
@@ -975,6 +997,13 @@ uvx affine-cipher encrypt -a 3 -b 10
 ```
 
 Once installed, `affine-cipher` works exactly as described throughout this README (`encrypt`/`decrypt` subcommands, `-a`/`-b`, `--brute-force`), no `uv run` prefix and no local clone needed.
+
+### How releases are published
+
+- From `v0.1.1` on, releases are built and published automatically by `publish.yml` when a `v*` tag is pushed, using Trusted Publishing, with no API token involved.
+- Each release has provenance attestations, which you can see on PyPI under the release’s files, linking the package back to the exact workflow run and commit that built it.
+
+For more details on the workflows, please go to the [CI/CD](#cicd) section.
 
 ## Footnotes
 
