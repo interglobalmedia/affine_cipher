@@ -32,6 +32,8 @@ The Affine Cipher is a type of monoalphabetic substitution cipher that encrypts 
     - [Linting + formatting](#linting--formatting)
     - [Testing](#testing)
     - [Security](#security)
+        - [Dependency updates](#dependency-updates)
+        - [Repository advanced security settings](#repository-advanced-security-settings)
     - [Pre-commit hooks](#pre-commit-hooks)
     - [CI/CD](#cicd)
         - [ci.yml](#ciyml)
@@ -76,6 +78,7 @@ If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|o
 ```
 .
 ├── .github
+│   ├── dependabot.yml
 │   └── workflows
 │       ├── ci.yml
 │       └── publish.yml
@@ -101,7 +104,7 @@ If you run tree -a -I 'htmlcov|Claude outputs|.coverage|test-notes.md|notes.md|o
 │   └── test_roundtrip.py
 └── uv.lock
 
-6 directories, 20 files
+6 directories, 21 files
 ```
 
 ### encrypt_affine_cypher.py -> src/affine_cipher/encrypt.py
@@ -157,7 +160,7 @@ The current `src/affine_cipher/encrypt.py` has changed since its original `encry
 - `affine_encryption()` calls `validate_affine_key()` from `key_validation.py`, so a non-coprime `a` raises an error.
 - Lowercase letters are now encrypted too. Each character is uppercased to find its position, then `restore_char_case()` from `case.py` puts its original case back.
 
-To view the current `src/affine_cipher/encrypt.py` file, please visit [src/affine_cipher/encrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/encrypt.py) in the affine_cipher GitHub repository.
+To view the current `src/affine_cipher/encrypt.py` file, please visit [src/affine_cipher/encrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.2/src/affine_cipher/encrypt.py) in the affine_cipher GitHub repository.
 
 ### decrypt_affine_cipher.py -> src/affine_cipher/decrypt.py
 
@@ -247,13 +250,13 @@ The current `src/affine_cipher/decrypt.py` has changed since its original `decry
 - `affine_decrypt()` calls `validate_affine_key()` from `key_validation.py`, so a non-coprime `a` raises an error.
 - Lowercase letters are now decrypted too. Each character is uppercased to find its position, then `restore_char_case()` from `case.py` puts its original case back.
 
-To view the current `src/affine_cipher/decrypt.py` file, please visit [src/affine_cipher/decrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/decrypt.py) in the affine_cipher GitHub repository.
+To view the current `src/affine_cipher/decrypt.py` file, please visit [src/affine_cipher/decrypt.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.2/src/affine_cipher/decrypt.py) in the affine_cipher GitHub repository.
 
 ### src/affine_cipher/cli.py
 
 `src/affine_cipher/cli.py` did not exist in the original application. It is the file that sets the `-a` and `-b` flags for `run_encrypt()` and `run_decrypt()` calls and `--brute-force` for `run_decrypt()`.
 
-To view the current `src/affine_cipher/cli.py` file, please visit [src/affine_cipher/cli.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.1/src/affine_cipher/cli.py) in the affine_cipher GitHub repository.
+To view the current `src/affine_cipher/cli.py` file, please visit [src/affine_cipher/cli.py](https://github.com/interglobalmedia/affine_cipher/blob/v0.1.2/src/affine_cipher/cli.py) in the affine_cipher GitHub repository.
 
 ## Mathematical function to encrypt the plaintext manually
 
@@ -942,7 +945,36 @@ I have taken things a step further:
 | --- | --- | --- |
 | `bandit` | security-focused static analysis tool | .pre-commit-config.yaml/<div>- id: bandit</div><div>&nbsp;&nbsp;args: ["-r", "src"]</div><div>&nbsp;&nbsp;pass_filenames: false</div> |
 | `pip-audit` | scans Python environments and dependency trees for packages with known security vulnerabilities | .pre-commit-config.yaml/<div>- id: pip-audit</div><div>&nbsp;&nbsp;name: pip-audit</div><div>&nbsp;&nbsp;entry: uv run pip-audit</div><div>&nbsp;&nbsp;language: system</div><div>&nbsp;&nbsp;pass_filenames: false</div><div>&nbsp;&nbsp;files: ^(pyproject\.toml\|uv\.lock)$</div> |
-| `zizmor` | static analysis tool for GitHub Actions that helps identify and fix security issues in CI/CD setups | Not configured, run manually with `uvx zizmor --persona=auditor .github/workflows/` |
+| `zizmor` | static analysis tool for GitHub Actions that helps identify and fix security issues in CI/CD setups | Not configured, run manually with `uvx zizmor --persona=auditor .github/` |
+
+#### Dependency updates
+
+| Tool | Purpose | Configured in |
+| --- | --- | --- |
+| uv cooldown (`exclude-newer`) | ignores any package releases published within a specified time frame and helps protect against potential supply-chain attacks by delaying the installation of newly released packages | pyproject.toml/<div>[tool.uv]</div><div>exclude-newer = "7 days"</div> |
+| Dependabot | provides weekly version updates for `github-actions` and `uv`, opened as PRs | `.github/dependabot.yml`/<div>cooldown:</div><div>&nbsp;&nbsp;default-days: 7</div> |
+
+Dependabot’s cooldown (`cooldown: default-days: 7` in dependabot.yml) matches `uv`’s `exclude-newer = "7 days"` interval so Dependabot won’t suggest a version that `uv` would refuse to lock.
+
+#### Repository advanced security settings
+
+The Advanced Security settings for the affine_cipher repository on GitHub can be found within the Settings tab under security and quality located in the left column.
+
+| Feature | Purpose | Configured in |
+| --- | --- | --- |
+| private vulnerability reporting | allows your community to privately report potential security vulnerabilities to maintainers and repository owners | advanced security → private vulnerability reporting |
+| dependency graph | identifies and understands your project's dependencies | advanced security → dependency scanning |
+| Dependabot alerts | receives alerts when vulnerabilities are detected in your dependencies | advanced security → Dependabot |
+| malware alerts | receives alerts when malware is detected in your dependencies | advanced security → Dependabot |
+| dismiss low-impact alerts for development-scoped dependencies | defines rules for security updates and auto dismissals on Dependabot alerts | advanced security → Dependabot → Dependabot rules |
+| Dependabot security updates | automatically opens pull requests for alerts with a patch | advanced security → Dependabot |
+| grouped security updates | groups security updates into one pull request per package manager and manifest directory | advanced security → Dependabot |
+| Dependabot version updates | automatically opens dependency update pull requests by configuring `dependabot.yml` | `.github/dependabot.yml` (linked from advanced security → Dependabot) |
+| CodeQL analysis | identifies vulnerabilities and errors with CodeQL for eligible repositories | advanced security → code security → tools |
+| Copilot autofix | suggests fixes for CodeQL alerts using AI | advanced security → code security → AI scan |
+| check runs failure threshold | selects the alert severity level for code scanning check runs to fail; sets to security alert severity level high or higher and standard alert severity level only errors | advanced security → code security → protection rules |
+| secret protection | continuously monitors a repository to prevent secret exposures and protect credentials | advanced security |
+| push protection | blocks pushes that contain supported secrets | advanced security → secret protection |
 
 ### Pre-commit hooks
 
